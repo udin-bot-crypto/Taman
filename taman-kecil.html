@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Taman Kecil</title><link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet"><style id="css">
+:root{--bg:#2b3a2e;--paper:#f6ecd3;--ink:#4a3320;--wood:#b9763f;--gold:#e0a82e;--btn:#f6ecd3;--btnink:#4a3320;--dim:#cfe3c4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c271f;--dim:#b9d1ae}}
+:root[data-theme="dark"]{--bg:#1c271f;--dim:#b9d1ae}
+html,body{height:100%;margin:0;background:var(--bg);font-family:'Pixelify Sans','Trebuchet MS',system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#app{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+#hint{color:var(--dim);font-size:15px;text-align:center;min-height:20px;padding:0 12px}
+.wrap{position:relative;height:min(calc(100dvh - 190px),calc(100vw*4/3));aspect-ratio:3/4;max-width:100%}
+canvas{width:100%;height:100%;display:block;border-radius:12px;border:3px solid var(--wood);background:#86c26a;image-rendering:pixelated;box-sizing:border-box}
+#toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--paper);color:var(--ink);padding:6px 14px;border-radius:10px;border:2px solid var(--wood);font-size:15px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+#ctl{display:flex;justify-content:space-between;align-items:center;width:min(100%,420px);padding:0 18px;box-sizing:border-box}
+.pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:3px}
+.pad button,#act{background:var(--btn);color:var(--btnink);border:3px solid var(--wood);border-radius:12px;font:600 18px inherit;font-family:inherit;touch-action:none}
+.pad button:active,#act:active{transform:translateY(2px)}
+#act{width:96px;height:96px;border-radius:50%;font-size:16px;line-height:1.1;padding:6px}
+#act.on{background:var(--gold);box-shadow:0 0 0 4px rgba(224,168,46,.35)}
+#modal{position:fixed;inset:0;background:rgba(15,22,16,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:5;touch-action:auto}
+.card{background:var(--paper);color:var(--ink);border:4px double var(--wood);border-radius:12px;max-width:380px;max-height:82dvh;overflow:auto;padding:20px 22px;line-height:1.55;font-size:16px;text-align:left;user-select:text;-webkit-user-select:text}
+.card h2{margin:0 0 10px;font-size:22px}
+.card p{margin:0 0 10px}
+.x{display:block;margin:14px auto 0;background:var(--wood);color:#fff7e6;border:0;border-radius:10px;padding:8px 22px;font:600 16px inherit;font-family:inherit}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fr div,.fr img{aspect-ratio:1;border:3px solid var(--wood);border-radius:6px;background:linear-gradient(135deg,#ead7b0,#d9b98a);display:flex;align-items:center;justify-content:center;font-size:13px;text-align:center;object-fit:cover;width:100%;box-sizing:border-box}
+#ed{background:var(--btn);color:var(--btnink);border:3px solid var(--wood);border-radius:10px;padding:5px 10px;font:600 14px inherit;font-family:inherit;z-index:2}
+.f label{display:block;font-weight:600;margin:10px 0 3px}
+.f input,.f textarea{width:100%;box-sizing:border-box;font:16px inherit;font-family:inherit;border:2px solid var(--wood);border-radius:8px;padding:6px 8px;background:#fffaf0;color:var(--ink)}
+.f textarea{min-height:84px;resize:vertical}
+.ph{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}.ph div{position:relative;width:64px;height:64px}.ph img{width:100%;height:100%;object-fit:cover;border-radius:6px;border:2px solid var(--wood)}.ph b{position:absolute;top:-7px;right:-7px;background:#c8493f;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:14px;cursor:pointer}
+.gb{border:2px solid var(--wood);border-radius:8px;background:#fffaf0;color:var(--ink);font:600 14px inherit;font-family:inherit;padding:6px 8px;margin:2px}
+.gb.on{background:var(--gold)}
+.sw{width:36px;height:36px;border:3px solid var(--wood);border-radius:8px;margin:2px;font-size:17px;padding:0;background:#fffaf0}
+.kd{width:100%;box-sizing:border-box;font:600 28px inherit;font-family:inherit;text-align:center;letter-spacing:.4em;border:3px solid var(--wood);border-radius:8px;padding:6px;background:#fffaf0;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style></head><body><div id="app">
+ <div id="hint"></div>
+ <div class="wrap"><canvas id="g" width="480" height="640"></canvas><div id="toast"></div></div>
+ <div id="ctl">
+  <div class="pad">
+   <span></span><button data-k="up" aria-label="Atas">▲</button><span></span>
+   <button data-k="left" aria-label="Kiri">◀</button><span></span><button data-k="right" aria-label="Kanan">▶</button>
+   <span></span><button data-k="down" aria-label="Bawah">▼</button><span></span>
+  </div>
+  <button id="ed" hidden="">✏️ Edit</button>
+  <button id="act" class="">Aksi</button>
+ </div>
+</div><div id="modal"></div><script id="cfgdata" type="application/json">{"nama":"Kaa Nicaaaan","dari":"Ada deh","sapaan":"Bingung","pesanUlangTahun":"Mau isi selamat ulang tahun tapi lu beloman ulang tahun kaa, enaknya isi apaa yaaa?","surat":["Kaa gua iseng banget inii, enaknya isi kata kata apaan yaaaa?","Terus ada yang kurang gak si menurut lu kaa?","Gua bikin taman kecil, buat lu jelajahin sendiri, tapi kayak kecil banget, saking kecilnya cuma yang bisa di interaksi dikit banget."],"catatan":["Bingung kaa catatan ini enaknya di isi apaa yaaa?"],"kode":"202","pesanAkhir":"Nihhh terakhir dari gua, lu jangan gak enakan sama gua kaa, santai aja yaa, tapii gua juga gak enakan si kaaa😅, masalahnya karna kita sama sama gak enakan jadi bingung harus gimana nganggepin nya gai sii?","foto":[],"teks":{},"penutup":"Anak MUDA,","judulSurat":"Untuk Kaaa Nicaaaann","ttd":"— Anak Muda","judulAlbum":"Album","judulHadiah":"Hadiah terakhir","cermin":"Udahh lucu kaa, jangan ngaca terus✨"}</script><script id="main">
+/* ====== ISI BAWAAN (ubah lewat tombol Edit isi di halaman) ====== */
+const CFG0={
+ nama:'Sayang', dari:'Aku',
+ baju:'#8bb58f', rambut:'#4a2c1a', gaya:0,
+ sapaan:'Selamat ulang tahun!',
+ pesanUlangTahun:'Semoga dunia selalu punya cara baik untuk bikin kamu tersenyum.',
+ surat:[
+  'Akhirnya kamu sampai di sini.',
+  'Aku bikin taman kecil ini diam-diam, buat kamu jelajahin sendiri.',
+  'Terima kasih udah jadi orang yang bikin hari-hariku lebih ringan. Semoga tahun ini baik banget buat kamu.'],
+ catatan:['Tiga hal yang aku suka dari kamu:','1) ... 2) ... 3) ...','(Ganti teks ini di CFG.catatan)'],
+ foto:[], // isi dengan data:image/... maksimal 4
+ kode:'725', // kode gembok peti (3 angka)
+ pesanAkhir:'Hadiah terakhirnya adalah kata-kata ini: kamu berharga, dan aku seneng banget kenal kamu.',
+ penutup:'Dengan sayang,', judulSurat:'Untuk {nama}', ttd:'— {dari}', judulAlbum:'Album', judulHadiah:'Hadiah terakhir',
+ cermin:'Cantik! Selamat ulang tahun, {nama} ✨', teks:{}
+};
+let SAVED={};try{SAVED=JSON.parse(document.getElementById('cfgdata').textContent)||{}}catch(e){}
+const CFG=Object.assign({},CFG0,SAVED);
+const fill=s=>String(s).replace(/\{nama\}/g,CFG.nama).replace(/\{dari\}/g,CFG.dari),T=s=>(CFG.teks&&CFG.teks[s])||s;
+/* =============================== */
+const $=s=>document.querySelector(s),cv=$('#g'),W=480,H=640;let c=cv.getContext('2d');
+let scene='garden',hasKey=false,doorOpen=false,musicOn=false,paused=false,mv=false,near=null,kecil=false,film=false,shotDone=false,pets=0,found={};
+const P={x:240,y:430,dir:1,t:0},K={},chick={x:330,y:430,vx:0,vy:0,t:0};
+const R=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};
+const Ci=(x,y,r,col)=>{c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill()};
+const flowers=Array.from({length:46},(_,i)=>({x:(i*97+31)%440+20,y:(i*61+7)%380+250,c:['#fff','#ffd1e0','#ffe58a','#e6d4ff'][i%4]})).filter(f=>!(f.x>200&&f.x<280));
+
+function modal(h){$('#modal').innerHTML='<div class="card">'+h+'<button class="x" onclick="closeM()">Tutup</button></div>';$('#modal').style.display='flex';paused=true}
+function closeM(){$('#modal').style.display='none';paused=false}
+function toast(t){const e=$('#toast');e.textContent=T(t);e.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.opacity=0,1900)}
+
+let ac,mt;
+function music(){
+ if(musicOn){clearInterval(mt);musicOn=false;toast('Musik dimatikan');return}
+ ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume();musicOn=true;toast('Musik diputar ♪');
+ const n=[261.6,329.6,392,523.3,392,329.6,220,261.6,329.6,440,329.6,261.6,174.6,220,261.6,349.2,196,246.9,293.7,392,293.7,246.9];let i=0;
+ mt=setInterval(()=>{const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;o.type='triangle';o.frequency.value=n[i++%n.length];g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o.connect(g);g.connect(ac.destination);o.start();o.stop(t+.5)},420);
+}
+
+const S={
+ garden:{minX:24,maxX:456,minY:240,maxY:612,
+  obs:[[120,110,240,125],[322,276,16,22],[68,448,64,44],[42,284,16,26],[422,304,16,26],[52,544,16,26],[412,524,16,26],[190,290,10,10],[282,290,10,10]],
+  objs:()=>[
+   {x:100,y:505,t:'Periksa peti',f:peti},
+   {x:52,y:328,t:'Periksa pohon merah',f:()=>{found.a=1;toast('Ada angka '+CFG.kode[0]+' terukir di batang 🍂')}},
+   {x:195,y:322,t:'Periksa lampu',f:()=>{found.b=1;toast('Angka '+CFG.kode[1]+' tertulis di tiang lampu 💡')}},
+   {x:330,y:320,t:'Buka kotak pos',f:()=>modal('<h2>Kotak pos</h2><p>Ada kertas: gembok peti pakai kode 3 angka. Angkanya ada di pohon yang merah, di lampu sebelah kiri jalan, dan... coba tanya si ayam.</p>')},
+   {x:446,y:430,t:'Gerbang studio',f:()=>{if(!film)toast('Gerbang terkunci. Butuh rol film 🎞️');else{scene='studio';P.x=70;P.y=540}}},
+   {x:240,y:250,t:hasKey?'Buka pintu':'Coba pintu',f:door},
+   {x:chick.x,y:chick.y,t:'Elus ayam',f:()=>{pets++;if(pets<3)toast('Kok kok! Elus lagi? 🐔');else{found.c=1;toast('Ayam ngeluarin telur bertuliskan angka '+CFG.kode[2]+' 🥚')}}}]},
+ room:{minX:70,maxX:420,minY:205,maxY:555,
+  obs:[[260,300,100,60],[40,300,52,100],[44,448,60,44]],
+  objs:()=>[
+   {x:170,y:212,t:'Baca surat',f:()=>modal('<h2>'+fill(CFG.judulSurat)+'</h2>'+CFG.surat.map(s=>'<p>'+s+'</p>').join('')+'<p>'+fill(CFG.ttd)+'</p>')},
+   {x:380,y:212,t:'Baca catatan',f:()=>modal(CFG.catatan.map(s=>'<p>'+s+'</p>').join(''))},
+   {x:310,y:380,t:'Lihat album',f:album},
+   {x:110,y:482,t:musicOn?'Matikan musik':'Putar musik',f:music},
+   {x:220,y:412,t:'Angkat karpet',f:()=>{if(!kecil){kecil=true;toast('Ada kunci kecil di bawah karpet! 🗝️')}else toast('Cuma debu 🧹')}},
+   {x:106,y:352,t:'Duduk di sofa',f:()=>toast('Empuk banget 🛋️')},
+   {x:98,y:212,t:'Lihat jendela',f:()=>toast('Di luar, tamannya tenang 🌿')},
+   {x:410,y:470,t:'Pintu kamar',f:()=>{if(!kecil)toast('Terkunci. Butuh kunci kecil 🗝️');else{scene='kamar';P.x=240;P.y=530}}},
+   {x:240,y:552,t:'Keluar rumah',f:()=>{scene='garden';P.x=240;P.y=262}}]},
+ kamar:{minX:60,maxX:425,minY:205,maxY:555,obs:[[60,215,110,130],[340,300,90,60],[186,424,28,26],[56,392,84,78]],
+  objs:()=>[
+   {x:115,y:366,t:'Rebahan di kasur',f:()=>toast('Nyaman banget, hampir ketiduran 😴')},
+   {x:295,y:224,t:'Ganti baju',f:ganti},
+   {x:395,y:224,t:'Ngaca',f:()=>toast(fill(CFG.cermin))},
+   {x:385,y:382,t:'Buka laci',f:laci},
+   {x:200,y:470,t:'Peluk boneka',f:()=>toast('Boneka beruangnya hangat 🧸')},
+   {x:96,y:490,t:'Meja rias',f:rias},
+   {x:240,y:552,t:'Ke ruang tamu',f:()=>{scene='room';P.x=400;P.y=470}}]},
+ studio:{minX:50,maxX:430,minY:222,maxY:570,obs:[[180,118,120,120],[50,330,110,50],[350,300,70,90],[396,500,40,34]],
+  objs:()=>[
+   {x:240,y:262,t:'Masuk photobooth',f:booth},
+   {x:105,y:410,t:'Main piano',f:()=>beep([261.6,293.7,329.6,392,440,523.3][Math.random()*6|0])},
+   {x:385,y:418,t:'Main arcade',f:()=>toast('Skor: '+(1000+Math.random()*9000|0)+' 🕹️')},
+   {x:85,y:228,t:'Pecahin balon',f:()=>toast('Pop! 🎈')},{x:415,y:228,t:'Pecahin balon',f:()=>toast('Pop! 🎈')},
+   {x:416,y:554,t:'Buka kotak hadiah',f:()=>shotDone?modal('<h2>'+fill(CFG.judulHadiah)+'</h2><p>'+CFG.pesanAkhir+'</p>'):toast('Pitanya terkunci. Foto dulu di photobooth 📸')},
+   {x:240,y:556,t:'Ke taman',f:()=>{scene='garden';P.x=420;P.y=420}}]}
+};
+function door(){
+ if(!hasKey){modal('<h2>Terkunci</h2><p>Pintunya digembok. Kuncinya ada di peti kayu, tapi gembok petinya perlu kode 3 angka yang tersebar di taman.</p>');return}
+ const first=!doorOpen;doorOpen=true;scene='room';P.x=240;P.y=530;if(!first)return;
+ modal('<h2>'+CFG.sapaan+'</h2><p><b>'+CFG.nama+'</b>,</p><p>'+CFG.pesanUlangTahun+'</p><p>'+fill(CFG.penutup)+' '+CFG.dari+'</p>');
+}
+function album(){
+ let h='<h2>'+fill(CFG.judulAlbum)+'</h2><div class="fr">';
+ for(let i=0;i<4;i++)h+=CFG.foto[i]?'<img src="'+CFG.foto[i]+'" alt="Foto '+(i+1)+'">':'<div>Foto '+(i+1)+'<br>belum diisi</div>';
+ modal(h+'</div>');
+}
+function act(){if(paused||!near)return;near.f()}
+function peti(){
+ if(hasKey){toast('Isinya cuma buah segar 🍎');return}
+ modal('<h2>Peti digembok</h2><p>Masukin kode 3 angka.</p><input id="kd" class="kd" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="___"><p id="kp" style="text-align:center;margin:8px 0 0"></p><button class="x" onclick="cek()">Coba kode</button>');
+}
+function cek(){const v=$('#kd');if(!v)return;if(v.value===CFG.kode){hasKey=true;closeM();toast('Gembok terbuka! Kunci rumah ketemu 🔑')}else{v.value='';$('#kp').textContent='Salah. Cari petunjuknya lagi.'}}
+function laci(){
+ if(!kecil)modal('<h2>Laci terkunci</h2><p>Gembok kecil. Mungkin kuncinya ada di ruang tamu.</p>');
+ else if(!film){film=true;toast('Dapat rol film! 🎞️ Gerbang studio di taman kebuka')}
+ else toast('Lacinya kosong');
+}
+const cols=['#8bb58f','#e58b8b','#9bb5d9','#e0a82e','#b9a2d8'];
+function ganti(){CFG.baju=cols[(cols.indexOf(CFG.baju)+1)%cols.length];toast('Baju diganti ✨')}
+function beep(f){ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume();const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+.8);o.connect(g);g.connect(ac.destination);o.start();o.stop(t+.9)}
+function hintTxt(){
+ if(scene==='garden'){if(!hasKey)return 'Kode peti: '+[0,1,2].map(i=>found['abc'[i]]?CFG.kode[i]:'_').join(' ')+' (cari di pohon, lampu, ayam)';if(!doorOpen)return 'Kunci didapat. Buka pintu rumah!';return film?'Rol film ada! Gerbang studio di kanan sudah bisa dibuka.':'Cari rol film. Petunjuk: kunci kecil, kamar, laci.'}
+ if(scene==='room')return kecil?'Kunci kecil didapat. Pintu kamar ada di kanan.':'Ada kunci kecil tersembunyi di ruang tamu.';
+ if(scene==='kamar')return film?'Rol film didapat! Bawa ke studio foto di taman.':'Cari rol film di kamar.';
+ return shotDone?'Buka kotak hadiah di pojok kanan bawah!':'Masuk ke photobooth, lalu jepret.';
+}
+let bg='#ffd1e0',stk='💖';
+function booth(){
+ modal('<h2>Photobooth</h2><canvas id="pb" width="200" height="440" style="width:100%;border:3px solid var(--wood);border-radius:6px;background:#fff"></canvas><p id="pt" style="text-align:center;margin:8px 0">Pilih latar dan stiker, lalu jepret!</p><p style="text-align:center;margin:0">'+['#ffd1e0','#cfe8ff','#fff1b8','#d9f2c9'].map(x=>'<button class="sw" aria-label="Latar" style="background:'+x+'" onclick="bg=\''+x+'\';pbDraw(3)"></button>').join('')+' '+['💖','🌸','⭐','🐥'].map(x=>'<button class="sw" aria-label="Stiker" onclick="stk=\''+x+'\';pbDraw(3)">'+x+'</button>').join('')+'</p><button class="x" style="background:#c8493f" onclick="snap()">Jepret!</button>');
+ pbDraw(0);
+}
+function pbDraw(n){
+ const e=$('#pb');if(!e)return;const x=e.getContext('2d'),m=c;c=x;
+ x.fillStyle='#fffaf0';x.fillRect(0,0,200,440);
+ for(let i=0;i<3;i++){const y=10+i*135;x.fillStyle=i<n?bg:'#e8e0cc';x.fillRect(10,y,180,125);
+  if(i<n){x.font='22px serif';x.fillText(stk,16,y+28);x.fillText(stk,160,y+112);x.save();x.translate(100,y+110);x.scale(1.5,1.5);charAt(0,0,0,i%2?-1:1,i);x.restore()}}
+ x.fillStyle='#4a3320';x.font='13px "Pixelify Sans",sans-serif';x.fillText(CFG.nama+' • '+new Date().toLocaleDateString('id-ID'),14,428);
+ c=m;
+}
+function snap(){
+ if(snap.b)return;snap.b=1;let i=0;const t=$('#pt');pbDraw(0);
+ (function s(){
+  if(i>=3){snap.b=0;shotDone=true;t.textContent='Fotonya jadi! Screenshot aja buat disimpan 📸';return}
+  let n=3;const k=setInterval(()=>{
+   if(!t.isConnected){clearInterval(k);snap.b=0;return}
+   t.textContent=n>0?'Siap... '+n:'📸 Klik!';
+   if(n--<0){clearInterval(k);i++;pbDraw(i);setTimeout(s,500)}
+  },500);
+ })();
+}
+function drawKamar(){
+ R(0,0,W,H,'#1d2a20');R(40,110,400,90,'#b9a2d8');for(let x=40;x<440;x+=40)R(x,110,2,90,'#a68ec9');
+ R(40,200,400,370,'#e0b27a');for(let y=200;y<570;y+=26)R(40,y,400,2,'#c9995f');
+ c.fillStyle='#8d5ea8';c.beginPath();c.ellipse(220,430,85,42,0,0,7);c.fill();
+ R(60,125,70,55,'#bfe4ea');R(92,125,4,55,'#7a5232');R(60,150,70,4,'#7a5232');
+ R(250,120,90,95,'#8a5528');R(256,126,36,83,'#a97b4c');R(298,126,36,83,'#a97b4c');Ci(290,170,3,'#e0a82e');Ci(300,170,3,'#e0a82e');
+ R(370,130,50,70,'#e0a82e');R(375,135,40,60,'#cfe8ff');
+ R(54,215,6,140,'#8a5528');R(60,215,110,130,'#f6ecd3');R(60,215,110,34,'#d9a0a0');R(70,222,40,20,'#fff');R(60,300,110,45,'#e58b8b');
+ R(340,300,90,60,'#8a5528');R(346,306,78,48,'#a97b4c');R(366,336,38,6,'#6b4423');
+ Ci(200,445,12,'#c68a5a');Ci(200,430,9,'#c68a5a');Ci(193,423,4,'#c68a5a');Ci(207,423,4,'#c68a5a');
+ R(56,420,84,50,'#a97b4c');R(56,420,84,12,'#c9a27a');R(66,392,64,34,'#7a5232');R(70,396,56,26,'#cfe8ff');R(74,400,10,8,'rgba(255,255,255,.7)');R(70,448,16,14,'#8a5528');R(94,448,16,14,'#8a5528');Ci(112,426,3,'#d9a0a0');R(118,424,10,8,'#e58b8b');
+ R(200,560,80,16,'#6b4423');R(214,566,52,6,'#e0a82e');
+}
+function drawStudio(){
+ R(0,0,W,H,'#1d2a20');R(40,110,400,110,'#f2b6c6');for(let x=40;x<440;x+=40)R(x,110,20,110,'#f6c8d4');
+ for(let y=220;y<570;y+=40)for(let x=40;x<440;x+=40)R(x,y,40,40,((x+y)/40%2)?'#f6ecd3':'#d9c6a0');
+ R(180,118,120,120,'#6b4a8f');R(190,128,100,100,'#8d6bb3');R(200,150,80,88,'#d94f6a');R(200,150,80,12,'#e8728a');R(206,126,68,16,'#f7e49b');
+ R(50,330,110,50,'#2b2b2b');for(let i=0;i<8;i++)R(54+i*13,334,11,36,'#fff');for(let i=0;i<7;i++)if(i!=2&&i!=6)R(63+i*13,334,7,22,'#222');
+ R(350,300,70,90,'#3f6bb5');R(358,308,54,38,'#10202a');R(366,316,16,10,'#7fe08f');R(392,326,10,10,'#e87272');R(358,356,54,8,'#2b4a85');Ci(372,374,5,'#e0a82e');
+ [[85,160,'#e87272'],[115,150,'#7ac0e8'],[400,160,'#f7d56a'],[430,150,'#9bd98c']].forEach(([x,y,k])=>{Ci(x,y,15,k);R(x-1,y+14,2,52,'#888')});
+ R(396,500,40,34,'#c8493f');R(396,512,40,6,'#f7e49b');R(413,500,6,34,'#f7e49b');
+ R(200,560,80,16,'#6b4423');R(214,566,52,6,'#e0a82e');
+}
+function extra(){
+ if(scene==='garden'){R(326,282,8,26,'#7a5232');R(318,270,24,16,'#c8493f');R(322,274,16,3,'#fff');
+  R(446,380,10,100,'#8a5528');R(446,380,30,10,'#8a5528');R(440,398,36,18,'#f7e49b');c.fillStyle='#4a3320';c.font='11px sans-serif';c.fillText('Studio',442,411)}
+ if(scene==='room')R(436,420,8,100,'#6b4423');
+}
+
+function blk(x,y,o){return x>o[0]-8&&x<o[0]+o[2]+8&&y>o[1]&&y<o[1]+o[3]+4}
+function upd(){
+ const s=S[scene];
+ chick.t--;if(chick.t<=0){chick.t=40+Math.random()*80;const a=Math.random()*7;const go=Math.random()<.6;chick.vx=go?Math.cos(a)*.6:0;chick.vy=go?Math.sin(a)*.6:0}
+ chick.x=Math.min(450,Math.max(250,chick.x+chick.vx));chick.y=Math.min(600,Math.max(300,chick.y+chick.vy));
+ if(paused)return;
+ let dx=(K.right?1:0)-(K.left?1:0),dy=(K.down?1:0)-(K.up?1:0);mv=!!(dx||dy);
+ if(mv){const l=Math.hypot(dx,dy),sp=2.7;dx=dx/l*sp;dy=dy/l*sp;if(dx)P.dir=dx>0?1:-1;P.t++;
+  const nx=Math.min(s.maxX,Math.max(s.minX,P.x+dx));if(!s.obs.some(o=>blk(nx,P.y,o)))P.x=nx;
+  const ny=Math.min(s.maxY,Math.max(s.minY,P.y+dy));if(!s.obs.some(o=>blk(P.x,ny,o)))P.y=ny}
+ near=null;let best=52;
+ for(const o of s.objs()){const d=Math.hypot(o.x-P.x,o.y-P.y);if(d<best){best=d;near=o}}
+ const a=$('#act');a.classList.toggle('on',!!near);a.textContent=near?T(near.t):T('Aksi');
+ $('#hint').textContent=hintTxt();
+}
+
+function tree(x,y,col){R(x-8,y-10,16,26,'#7a5232');Ci(x,y-34,34,col);Ci(x-20,y-18,20,col);Ci(x+20,y-18,20,col)}
+function lamp(x,y){R(x-3,y-46,6,50,'#3b3b3b');R(x-10,y-62,20,18,'#f7e49b');R(x-12,y-66,24,6,'#3b3b3b');R(x-8,y,16,6,'#3b3b3b')}
+function drawGarden(){
+ R(0,0,W,H,'#86c26a');
+ for(let y=0;y<H;y+=40)for(let x=(y/40%2)*40;x<W;x+=80)R(x,y,40,40,'#7fbb63');
+ R(212,230,56,H-230,'#e3cfa0');
+ for(let y=250;y<H;y+=36){R(222,y,8,6,'#d2bb88');R(248,y+16,8,6,'#d2bb88')}
+ flowers.forEach(f=>Ci(f.x,f.y,3,f.c));
+ R(120,110,240,125,'#f3e7c9');R(120,220,240,15,'#c9b68a');
+ c.fillStyle='#5c8f4a';c.beginPath();c.moveTo(100,118);c.lineTo(380,118);c.lineTo(330,50);c.lineTo(150,50);c.fill();
+ R(100,118,280,8,'#3f6e34');
+ [[150,145],[290,145]].forEach(([x,y])=>{R(x,y,44,40,'#8fc4c9');R(x+20,y,4,40,'#7a5232');R(x,y+18,44,4,'#7a5232');R(x-4,y+40,52,6,'#a97b4c')});
+ R(220,165,40,70,doorOpen?'#3a2a1e':'#9a5f33');R(224,170,32,60,doorOpen?'#241810':'#b2713d');Ci(250,205,3,'#f0c14a');
+ tree(52,300,'#c9503f');tree(430,320,'#4f9a4a');tree(60,560,'#4f9a4a');tree(420,540,'#5aa653');
+ lamp(195,300);lamp(287,300);
+ R(68,448,64,44,'#b9763f');R(68,448,64,9,'#8a5528');R(68,474,64,4,'#8a5528');
+ Ci(86,447,7,'#d0473c');Ci(104,445,7,'#7bbd4a');Ci(120,447,6,'#d0473c');
+ // ayam
+ const cx=chick.x,cy=chick.y,f=chick.vx<0?-1:1;
+ c.fillStyle='rgba(0,0,0,.15)';c.beginPath();c.ellipse(cx,cy,12,4,0,0,7);c.fill();
+ Ci(cx,cy-10,11,'#fff');Ci(cx+f*9,cy-18,6,'#fff');R(cx+f*9-2,cy-26,4,5,'#d63b3b');R(cx+f*14,cy-18,5,3,'#f2a63a');R(cx+f*9+1,cy-20,2,2,'#222');
+}
+function drawRoom(){
+ R(0,0,W,H,'#1d2a20');
+ R(40,110,400,90,'#a4533a');for(let x=40;x<440;x+=40)R(x,110,2,90,'#8c4430');for(let y=130;y<200;y+=22)R(40,y,400,2,'#8c4430');
+ R(40,200,400,370,'#dba46a');for(let y=200;y<570;y+=26)R(40,y,400,2,'#c48e57');
+ R(120,330,200,150,'#b84a46');R(132,342,176,126,'#e9d6a4');R(144,354,152,102,'#6aa3a0');
+ // jendela
+ R(60,125,70,55,'#bfe4ea');R(92,125,4,55,'#7a5232');R(60,150,70,4,'#7a5232');
+ // rak buku
+ R(125,140,100,70,'#7a5232');for(let i=0;i<7;i++)R(131+i*13,146,10,26,['#c8493f','#e0a82e','#4d8f8a','#8d5ea8','#6fae5a','#d9834a','#4a6fa5'][i]);for(let i=0;i<7;i++)R(131+i*13,178,10,26,['#4a6fa5','#c8493f','#6fae5a','#e0a82e','#8d5ea8','#4d8f8a','#d9834a'][i]);
+ // papan catatan
+ R(335,135,90,68,'#8a5528');R(341,141,78,56,'#f1e2b8');R(350,152,36,6,'#e58b8b');R(350,166,56,5,'#9bb5d9');R(350,178,44,5,'#9bd9a8');
+ // meja
+ R(260,300,100,60,'#8a5528');R(266,306,88,48,'#a97b4c');R(290,318,28,22,'#f6ecd3');R(294,322,20,14,'#d9a0a0');Ci(335,322,8,'#fff');R(333,328,4,22,'#6fae5a');
+ // sofa
+ R(40,300,52,100,'#3f9a9a');R(40,300,14,100,'#2f7f80');R(56,308,30,84,'#58b3b1');
+ // radio
+ R(44,448,60,44,'#8a5528');R(52,456,24,24,'#2b2b2b');Ci(64,468,8,'#555');R(82,458,14,6,'#e0a82e');R(82,470,14,6,'#e0a82e');
+ if(musicOn){c.fillStyle='#fff';c.font='20px sans-serif';c.fillText('♪',78,440+Math.sin(P.t*.1+Date.now()/200)*4)}
+ // pintu keluar
+ R(200,560,80,16,'#6b4423');R(214,566,52,6,'#e0a82e');
+}
+function drawP(){charAt(P.x,P.y,mv?Math.sin(P.t*.35)*2:0,P.dir,0)}
+function charAt(x,y,b,dir,arm){
+ c.fillStyle='rgba(0,0,0,.22)';c.beginPath();c.ellipse(x,y,16,6,0,0,7);c.fill();
+ R(x-8,y-9,6,9,'#f1d3b2');R(x+2,y-9,6,9,'#f1d3b2');
+ hairBack(x,y,b,dir);
+ R(x-12,y-32+b,24,24,CFG.baju);R(x-12,y-12+b,24,4,'rgba(0,0,0,.12)');
+ hairFront(x,y,b,dir);
+ Ci(x,y-41+b,11,'#f6d9bd');c.fillStyle=CFG.rambut;c.beginPath();c.ellipse(x,y-50+b,12,5,0,0,7);c.fill();
+ R(x-6+dir*2,y-44+b,3,5,'#3a2a1e');R(x+3+dir*2,y-44+b,3,5,'#3a2a1e');
+ Ci(x-8+dir*2,y-38+b,2.5,'#f2a9a0');Ci(x+8+dir*2,y-38+b,2.5,'#f2a9a0');
+ if(arm){R(x+12,y-50+b,6,22,CFG.baju);Ci(x+15,y-52+b,4,'#f6d9bd');if(arm===1){R(x-18,y-50+b,6,22,CFG.baju);Ci(x-15,y-52+b,4,'#f6d9bd')}}
+}
+function hairBack(x,y,b,dir){
+ const h=CFG.rambut,g=CFG.gaya|0;Ci(x,y-45+b,17,h);
+ if(g===0)R(x-16,y-45+b,32,26,h);
+ else if(g===1){c.fillStyle=h;c.beginPath();c.ellipse(x-dir*18,y-32+b,6,16,-dir*.2,0,7);c.fill();Ci(x-dir*15,y-50+b,3,'#e0a82e')}
+ else if(g===3)R(x-16,y-45+b,32,15,h);
+ else if(g===4){Ci(x,y-64+b,8,h);R(x-6,y-58+b,12,3,'#e58b8b')}
+ else if(g===5){R(x-18,y-45+b,36,26,h);[-14,-5,5,14].forEach(k=>Ci(x+k,y-19+b,5,h))}
+}
+function hairFront(x,y,b,dir){
+ const h=CFG.rambut,g=CFG.gaya|0;
+ if(g===0||g===5){const w=g?8:7;R(x-7-w,y-36+b,w,19,h);R(x+7,y-36+b,w,19,h);R(x-12,y-34+b,2,15,'rgba(255,255,255,.18)');R(x+10,y-34+b,2,15,'rgba(255,255,255,.18)')}
+ else if(g===2)for(let i=0;i<5;i++){Ci(x-15,y-36+b+i*5,3.8,h);Ci(x+15,y-36+b+i*5,3.8,h);if(i===4){Ci(x-15,y-12+b,3,'#e58b8b');Ci(x+15,y-12+b,3,'#e58b8b')}}
+}
+const GAYA=['Panjang sedada','Kuncir kuda','Kepang dua','Bob pendek','Cepol','Bergelombang'],WRN=['#4a2c1a','#8a5a3c','#1e1612','#c7a05a','#a64b2a','#d98aa5'];
+function rias(){
+ modal('<h2>Meja rias</h2><canvas id="rv" width="140" height="150" style="display:block;margin:0 auto 8px;background:linear-gradient(#ffe9ef,#f6d9e2);border:3px solid var(--wood);border-radius:8px"></canvas><p style="margin:0 0 4px"><b>Gaya rambut</b></p><div id="rg"></div><p style="margin:8px 0 4px"><b>Warna rambut</b></p><div id="rw"></div>');
+ rvDraw();
+}
+function rvDraw(){
+ const e=$('#rv');if(!e)return;const x=e.getContext('2d'),m=c;c=x;x.clearRect(0,0,140,150);x.save();x.translate(70,138);x.scale(1.9,1.9);charAt(0,0,0,1,0);x.restore();c=m;
+ $('#rg').innerHTML=GAYA.map((n,i)=>'<button class="gb'+(CFG.gaya===i?' on':'')+'" onclick="CFG.gaya='+i+';rvDraw()">'+n+'</button>').join('');
+ $('#rw').innerHTML=WRN.map(k=>'<button class="sw" aria-label="Warna rambut" style="background:'+k+(CFG.rambut===k?';outline:3px solid #e0a82e':'')+'" onclick="CFG.rambut=\''+k+'\';rvDraw()"></button>').join('');
+}
+function bubble(){
+ if(!near||paused)return;
+ c.font='600 15px "Pixelify Sans",sans-serif';const t=T(near.t),w=c.measureText(t).width+20,x=Math.min(W-w-6,Math.max(6,P.x-w/2)),y=P.y-86;
+ c.fillStyle='#f6ecd3';c.strokeStyle='#b9763f';c.lineWidth=3;c.beginPath();c.roundRect(x,y,w,26,8);c.fill();c.stroke();
+ c.fillStyle='#4a3320';c.fillText(t,x+10,y+18);
+}
+function loop(){upd();({garden:drawGarden,room:drawRoom,kamar:drawKamar,studio:drawStudio})[scene]();extra();drawP();bubble();requestAnimationFrame(loop)}
+loop();
+
+/* ===== Panel edit: cuma muncul buat pemilik halaman ===== */
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+let fotoTmp=[];
+const DEFS=['Aksi','Periksa peti','Periksa pohon merah','Periksa lampu','Buka kotak pos','Gerbang studio','Elus ayam','Buka pintu','Coba pintu','Baca surat','Baca catatan','Lihat album','Putar musik','Matikan musik','Angkat karpet','Duduk di sofa','Lihat jendela','Pintu kamar','Keluar rumah','Rebahan di kasur','Ganti baju','Ngaca','Buka laci','Peluk boneka','Ke ruang tamu','Masuk photobooth','Main piano','Main arcade','Pecahin balon','Buka kotak hadiah','Ke taman','Isinya cuma buah segar 🍎','Kok kok! Elus lagi? 🐔','Cuma debu 🧹','Empuk banget 🛋️','Di luar, tamannya tenang 🌿','Nyaman banget, hampir ketiduran 😴','Boneka beruangnya hangat 🧸','Lacinya kosong','Pop! 🎈','Musik dimatikan','Musik diputar ♪','Baju diganti ✨','Meja rias'];
+async function initEd(){
+ try{const u=await window.claude.use('user');if(!u)return;if(!((await u.isOwner())||(await u.canEdit())))return;$('#ed').hidden=false;$('#ed').onclick=openEd}catch(e){}
+}
+function openEd(){
+ fotoTmp=(CFG.foto||[]).slice(0,4);
+ const v=(k,x)=>'<label>'+k+'</label>'+x;
+ modal('<div class="f"><h2>Edit isi</h2>'
+ +v('Nama penerima','<input id="e_nama" value="'+esc(CFG.nama)+'">')
+ +v('Nama pengirim','<input id="e_dari" value="'+esc(CFG.dari)+'">')
+ +v('Judul kartu ulang tahun','<input id="e_sapaan" value="'+esc(CFG.sapaan)+'">')
+ +v('Pesan di kartu ulang tahun','<textarea id="e_pesan">'+esc(CFG.pesanUlangTahun)+'</textarea>')
+ +v('Isi surat (pisahkan paragraf dengan baris kosong)','<textarea id="e_surat">'+esc(CFG.surat.join('\n\n'))+'</textarea>')
+ +v('Catatan (satu baris = satu paragraf)','<textarea id="e_cat">'+esc(CFG.catatan.join('\n'))+'</textarea>')
+ +v('Kode gembok peti (3 angka)','<input id="e_kode" inputmode="numeric" maxlength="3" value="'+esc(CFG.kode)+'">')
+ +v('Pesan di kotak hadiah','<textarea id="e_akhir">'+esc(CFG.pesanAkhir)+'</textarea>')
+ +v('Penutup kartu ulang tahun (sebelum nama pengirim)','<input id="e_penutup" value="'+esc(CFG.penutup)+'">')
+ +v('Judul surat ({nama} = nama penerima)','<input id="e_jsurat" value="'+esc(CFG.judulSurat)+'">')
+ +v('Tanda tangan surat ({dari} = nama pengirim)','<input id="e_ttd" value="'+esc(CFG.ttd)+'">')
+ +v('Judul album','<input id="e_jalbum" value="'+esc(CFG.judulAlbum)+'">')
+ +v('Judul kotak hadiah','<input id="e_jhadiah" value="'+esc(CFG.judulHadiah)+'">')
+ +v('Kata-kata di cermin','<input id="e_cermin" value="'+esc(CFG.cermin)+'">')
+ +'<details><summary style="margin-top:14px;font-weight:600;cursor:pointer">Teks tombol dan pesan kecil</summary>'+DEFS.map((s,i)=>'<input class="tk" data-i="'+i+'" aria-label="'+esc(s)+'" value="'+esc(T(s))+'" style="margin-top:5px">').join('')+'</details>'
+ +v('Foto album (maks. 4)','<div class="ph" id="e_ph"></div><input type="file" id="e_file" accept="image/*" multiple>')
+ +'<p id="e_msg" style="margin:8px 0 0"></p><button class="x" style="background:#c8493f" onclick="saveEd()">Simpan</button></div>');
+ $('#e_file').onchange=addFoto;drawPh();
+}
+function drawPh(){const p=$('#e_ph');if(!p)return;p.innerHTML=fotoTmp.map((s,i)=>'<div><img src="'+s+'" alt="Foto '+(i+1)+'"><b role="button" aria-label="Hapus foto" onclick="fotoTmp.splice('+i+',1);drawPh()">×</b></div>').join('')}
+function addFoto(e){
+ [...e.target.files].forEach(f=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{if(fotoTmp.length>=4)return;const s=420,cn=document.createElement('canvas');cn.width=cn.height=s;const m=Math.min(im.width,im.height);cn.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,s,s);fotoTmp.push(cn.toDataURL('image/jpeg',.78));drawPh()};im.src=r.result};r.readAsDataURL(f)});
+ e.target.value='';
+}
+function srcHtml(json){
+ const a=$('#app').cloneNode(true);
+ a.querySelector('#hint').textContent='';const t=a.querySelector('#toast');t.textContent='';t.removeAttribute('style');
+ const b=a.querySelector('#act');b.className='';b.textContent='Aksi';a.querySelector('#ed').hidden=true;
+ return '<!doctype html>\n<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Taman Kecil</title><link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet"><style id="css">'+$('#css').textContent+'</style></head><body>'+a.outerHTML+'<div id="modal"></div><script id="cfgdata" type="application/json">'+json.replace(/</g,'\\u003c')+'<\/script><script id="main">'+$('#main').textContent+'<\/script></body></html>';
+}
+async function saveEd(){
+ const g=id=>$('#'+id).value.trim(),m=$('#e_msg');
+ if(!/^\d{3}$/.test(g('e_kode'))){m.textContent='Kode gembok harus tepat 3 angka.';return}
+ const teks={};document.querySelectorAll('.tk').forEach(i=>{const s=DEFS[+i.dataset.i],v=i.value.trim();if(v&&v!==s)teks[s]=v});
+ const d={teks,penutup:g('e_penutup'),judulSurat:g('e_jsurat'),ttd:g('e_ttd'),judulAlbum:g('e_jalbum'),judulHadiah:g('e_jhadiah'),cermin:g('e_cermin'),nama:g('e_nama')||CFG0.nama,dari:g('e_dari')||CFG0.dari,sapaan:g('e_sapaan'),pesanUlangTahun:g('e_pesan'),surat:g('e_surat').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean),catatan:g('e_cat').split('\n').map(s=>s.trim()).filter(Boolean),kode:g('e_kode'),pesanAkhir:g('e_akhir'),foto:fotoTmp};
+ m.textContent='Menyimpan...';
+ try{
+  const a=await window.claude.use('artifact');
+  if(!a){m.textContent='Fitur simpan belum tersedia di tampilan ini.';return}
+  await a.publish(srcHtml(JSON.stringify(Object.assign({},SAVED,d))));
+  m.textContent='Tersimpan! Memuat ulang...';
+ }catch(err){
+  const k=err&&err.code;
+  m.textContent=k==='conflict'?'Halaman baru saja diubah, memuat versi terbaru...':(k==='not_writer'||k==='not_granted')?'Akun ini nggak punya izin edit halaman.':k==='too_large'?'Terlalu besar. Kurangi jumlah foto.':'Gagal menyimpan. Coba lagi sebentar lagi.';
+ }
+}
+initEd();
+
+const map={arrowleft:'left',a:'left',arrowright:'right',d:'right',arrowup:'up',w:'up',arrowdown:'down',s:'down'};
+addEventListener('keydown',e=>{if(/INPUT|TEXTAREA/.test(e.target.tagName)){if(e.key==='Enter'&&e.target.id==='kd')cek();return}const k=e.key.toLowerCase();if(map[k]){K[map[k]]=1;e.preventDefault()}if(k===' '||k==='e'||k==='enter'){if($('#modal').style.display==='flex')closeM();else act();e.preventDefault()}if(k==='escape')closeM()});
+addEventListener('keyup',e=>{const k=map[e.key.toLowerCase()];if(k)K[k]=0});
+document.querySelectorAll('.pad button').forEach(b=>{const k=b.dataset.k;
+ b.addEventListener('pointerdown',e=>{K[k]=1;b.setPointerCapture(e.pointerId);e.preventDefault()});
+ ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>K[k]=0))});
+$('#act').addEventListener('pointerdown',e=>{act();e.preventDefault()});
+</script></body></html>
